@@ -14,7 +14,7 @@ import (
 
 // Health status constants
 const (
-	StatusHealthy      = "healthy"
+	StatusHealthy      = "ok"
 	StatusDegraded     = "degraded"
 	StatusUnhealthy    = "unhealthy"
 	ServiceName        = "stellarbill-backend"
@@ -81,7 +81,15 @@ func NewHealthChecker(db DBPinger, outbox OutboxHealther) *HealthChecker {
 // LivenessProbe returns a simple liveness check (application is running)
 // Used by Kubernetes liveness probes to restart unhealthy pods
 func (h *Handler) LivenessProbe(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	response := HealthResponse{
+		Status:    StatusHealthy,
+		Service:   ServiceName,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Dependencies: map[string]interface{}{
+			"note": "liveness probe - application is running",
+		},
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 // ReadinessProbe returns readiness status (ready to handle requests)
